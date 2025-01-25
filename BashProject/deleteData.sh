@@ -38,9 +38,16 @@ select option in "Delete all data" "Delete based on condition" "Quit"; do
             if [[ $column_index -eq -1 ]]; then
                 echo "Error: Column '$column_name' not found."
             else
-                # Delete rows where the specified column matches the value
-                awk -F':' -v col="$column_index" -v val="$value" 'NR <= 2 || $col != val' "$tablename" > temp && mv temp "$tablename"
-                echo "Rows where $column_name='$value' have been deleted."
+                # Count matching rows
+                match_count=$(awk -F':' -v col="$column_index" -v val="$value" 'NR > 2 && $col == val' "$tablename" | wc -l)
+
+                if [[ $match_count -eq 0 ]]; then
+                    echo "No rows found where $column_name='$value'."
+                else
+                    # Delete rows where the specified column matches the value
+                    awk -F':' -v col="$column_index" -v val="$value" 'NR <= 2 || $col != val' "$tablename" > temp && mv temp "$tablename"
+                    echo "Rows where $column_name='$value' have been deleted."
+                fi
             fi
             ;;
         "Quit")
@@ -52,5 +59,3 @@ select option in "Delete all data" "Delete based on condition" "Quit"; do
             ;;
     esac
 done
-
-
